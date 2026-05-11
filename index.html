@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EQUIPE ROUTER</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <header class="topo">
+      <h1>EQUIPE ROUTER</h1>
+      <p>Controle de Produção Diário</p>
+    </header>
+
+    <!-- FORMULÁRIO -->
+    <section class="card">
+      <h2>Novo Registro</h2>
+
+      <div class="input-group">
+        <label>Data</label>
+        <input type="date" id="data">
+      </div>
+
+      <div class="input-group">
+        <label>Quantidade de Peças</label>
+        <input type="number" id="pecas" placeholder="Ex: 150">
+      </div>
+
+      <div class="input-group">
+        <label>Quantidade de OS</label>
+        <input type="number" id="os" placeholder="Ex: 20">
+      </div>
+
+      <button onclick="adicionarRegistro()">
+        Salvar Registro
+      </button>
+    </section>
+
+    <!-- RESUMO -->
+    <section class="card">
+      <h2>Resumo</h2>
+
+      <div class="resumo-grid">
+
+        <div class="box azul">
+          <span>Total Peças</span>
+          <strong id="totalPecas">0</strong>
+        </div>
+
+        <div class="box verde">
+          <span>Total OS</span>
+          <strong id="totalOS">0</strong>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FILTROS -->
+    <section class="card">
+      <h2>Filtros</h2>
+
+      <div class="filtros">
+
+        <button onclick="filtrar('hoje')">Hoje</button>
+
+        <button onclick="filtrar(7)">7 Dias</button>
+
+        <button onclick="filtrar(14)">14 Dias</button>
+
+        <button onclick="filtrar(30)">Mês</button>
+
+        <button onclick="filtrar('todos')">Todos</button>
+
+      </div>
+    </section>
+
+    <!-- HISTÓRICO -->
+    <section class="card">
+      <h2>Histórico</h2>
+
+      <div id="historico"></div>
+    </section>
+
+  </div>
+
+  <script src="./js/script.js"></script>
+</body>
+</html>
