@@ -1,173 +1,317 @@
-let registros = JSON.parse(localStorage.getItem("equipeRouter")) || [];
+// IMPORT FIREBASE
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-document.getElementById("data").valueAsDate = new Date();
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  deleteDoc,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-let editandoIndex = null;
 
-function salvarDados() {
-  localStorage.setItem("equipeRouter", JSON.stringify(registros));
-}
+// CONFIG FIREBASE
+const firebaseConfig = {
 
-function adicionarRegistro() {
+  apiKey: "SUA_API_KEY",
 
-  const data = document.getElementById("data").value;
-  const pecas = Number(document.getElementById("pecas").value);
-  const os = Number(document.getElementById("os").value);
+  authDomain: "SEU_PROJETO.firebaseapp.com",
 
-  if (data === "" || pecas <= 0 || os <= 0) {
+  projectId: "SEU_PROJECT_ID",
+
+  storageBucket: "SEU_PROJETO.appspot.com",
+
+  messagingSenderId: "SEU_ID",
+
+  appId: "SEU_APP_ID"
+
+};
+
+
+// INICIAR FIREBASE
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+
+// ELEMENTOS
+const historico =
+  document.getElementById("historico");
+
+const totalPecas =
+  document.getElementById("totalPecas");
+
+const totalOS =
+  document.getElementById("totalOS");
+
+const btnSalvar =
+  document.getElementById("btnSalvar");
+
+
+// DATA AUTOMÁTICA
+document.getElementById("data").valueAsDate =
+  new Date();
+
+
+// VARIÁVEIS
+let editandoId = null;
+
+let registros = [];
+
+
+// SALVAR
+btnSalvar.addEventListener("click", async () => {
+
+  const data =
+    document.getElementById("data").value;
+
+  const pecas =
+    Number(document.getElementById("pecas").value);
+
+  const os =
+    Number(document.getElementById("os").value);
+
+  if (!data || pecas <= 0 || os <= 0) {
+
     alert("Preencha todos os campos!");
+
     return;
   }
 
   // EDITAR
-  if (editandoIndex !== null) {
+  if (editandoId) {
 
-    registros[editandoIndex] = {
-      data,
-      pecas,
-      os
-    };
+    await updateDoc(
+      doc(db, "registros", editandoId),
+      {
+        data,
+        pecas,
+        os
+      }
+    );
 
-    editandoIndex = null;
+    editandoId = null;
 
-    document.querySelector("button").innerText = "Salvar Registro";
+    btnSalvar.innerText =
+      "Salvar Registro";
 
   } else {
 
-    // NOVO REGISTRO
-    registros.push({
-      data,
-      pecas,
-      os
-    });
+    // NOVO
+    await addDoc(
+      collection(db, "registros"),
+      {
+        data,
+        pecas,
+        os
+      }
+    );
 
   }
 
-  salvarDados();
-
   limparCampos();
 
-  renderizar(registros);
-}
+});
 
+
+// TEMPO REAL
+onSnapshot(
+
+  collection(db, "registros"),
+
+  (snapshot) => {
+
+    registros = [];
+
+    snapshot.forEach((docItem) => {
+
+      registros.push({
+
+        id: docItem.id,
+
+        ...docItem.data()
+
+      });
+
+    });
+
+    renderizar(registros);
+
+  }
+
+);
+
+
+// RENDER
 function renderizar(lista) {
-
-  const historico = document.getElementById("historico");
 
   historico.innerHTML = "";
 
   let totalPecas = 0;
+
   let totalOS = 0;
 
-  lista.sort((a, b) => new Date(b.data) - new Date(a.data));
+  lista.sort((a, b) =>
+    new Date(b.data) - new Date(a.data)
+  );
 
-  lista.forEach((item, index) => {
+  lista.forEach((item) => {
 
     totalPecas += item.pecas;
+
     totalOS += item.os;
 
     historico.innerHTML += `
-    
+
       <div class="item">
 
         <h3>${formatarData(item.data)}</h3>
 
-        <p>📦 Peças entregues: <strong>${item.pecas}</strong></p>
+        <p>
+          📦 Peças:
+          <strong>${item.pecas}</strong>
+        </p>
 
-        <p>📝 OS preenchidas: <strong>${item.os}</strong></p>
+        <p>
+          📝 OS:
+          <strong>${item.os}</strong>
+        </p>
 
         <div class="acoes">
 
-          <button class="editar"
-            onclick="editarRegistro(${index})">
+          <button
+            class="editar"
+            onclick="editarRegistro('${item.id}')"
+          >
             Editar
           </button>
 
-          <button class="deletar"
-            onclick="deletarRegistro(${index})">
+          <button
+            class="deletar"
+            onclick="deletarRegistro('${item.id}')"
+          >
             Excluir
           </button>
 
         </div>
 
       </div>
+
     `;
   });
 
-  document.getElementById("totalPecas").innerText = totalPecas;
-  document.getElementById("totalOS").innerText = totalOS;
+  totalPecas.innerText = totalPecas;
+
+  totalOS.innerText = totalOS;
+
 }
 
-function editarRegistro(index) {
 
-  const item = registros[index];
+// EDITAR
+window.editarRegistro = function (id) {
 
-  document.getElementById("data").value = item.data;
-  document.getElementById("pecas").value = item.pecas;
-  document.getElementById("os").value = item.os;
+  const item =
+    registros.find(
+      reg => reg.id === id
+    );
 
-  editandoIndex = index;
+  if (!item) return;
 
-  document.querySelector("button").innerText = "Atualizar Registro";
+  document.getElementById("data").value =
+    item.data;
+
+  document.getElementById("pecas").value =
+    item.pecas;
+
+  document.getElementById("os").value =
+    item.os;
+
+  editandoId = id;
+
+  btnSalvar.innerText =
+    "Atualizar Registro";
 
   window.scrollTo({
+
     top: 0,
+
     behavior: "smooth"
+
   });
-}
 
-function deletarRegistro(index) {
+};
 
-  const confirmar = confirm("Deseja excluir esse registro?");
 
-  if (!confirmar) return;
+// DELETAR
+window.deletarRegistro =
+  async function (id) {
 
-  registros.splice(index, 1);
+    const confirmar =
+      confirm("Deseja excluir?");
 
-  salvarDados();
+    if (!confirmar) return;
 
-  renderizar(registros);
-}
+    await deleteDoc(
+      doc(db, "registros", id)
+    );
 
-function limparCampos() {
+  };
 
-  document.getElementById("pecas").value = "";
-  document.getElementById("os").value = "";
 
-  document.getElementById("data").valueAsDate = new Date();
-}
-
-function filtrar(tipo) {
+// FILTRAR
+window.filtrar = function (tipo) {
 
   if (tipo === "todos") {
+
     renderizar(registros);
+
     return;
   }
 
   const hoje = new Date();
 
-  let filtrados = registros.filter(item => {
+  const filtrados =
+    registros.filter(item => {
 
-    const dataItem = new Date(item.data);
+      const dataItem =
+        new Date(item.data);
 
-    const diferenca =
-      (hoje - dataItem) / (1000 * 60 * 60 * 24);
+      const diferenca =
+        (hoje - dataItem)
+        / (1000 * 60 * 60 * 24);
 
-    if (tipo === "hoje") {
-      return diferenca < 1;
-    }
+      return diferenca <= tipo;
 
-    return diferenca <= tipo;
-  });
+    });
 
   renderizar(filtrados);
-}
 
+};
+
+
+// FORMATAR DATA
 function formatarData(data) {
 
   const partes = data.split("-");
 
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  return `
+    ${partes[2]}/${partes[1]}/${partes[0]}
+  `;
 }
 
-renderizar(registros);
+
+// LIMPAR
+function limparCampos() {
+
+  document.getElementById("pecas").value =
+    "";
+
+  document.getElementById("os").value =
+    "";
+
+  document.getElementById("data").valueAsDate =
+    new Date();
+
+}
