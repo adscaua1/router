@@ -1,4 +1,7 @@
-// IMPORT FIREBASE
+// ==========================================
+// IMPORTS FIREBASE
+// ==========================================
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
@@ -12,67 +15,85 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
+// ==========================================
 // CONFIG FIREBASE
+// COLE SUA CONFIG REAL AQUI
+// ==========================================
+
 const firebaseConfig = {
-
-  apiKey: "SUA_API_KEY",
-
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-
-  projectId: "SEU_PROJECT_ID",
-
-  storageBucket: "SEU_PROJETO.appspot.com",
-
-  messagingSenderId: "SEU_ID",
-
-  appId: "SEU_APP_ID"
-
+  apiKey: "AIzaSyChtqZkp03_JDaGGqfmvecruqgn8JimEkU",
+  authDomain: "router-5e460.firebaseapp.com",
+  projectId: "router-5e460",
+  storageBucket: "router-5e460.firebasestorage.app",
+  messagingSenderId: "976849939188",
+  appId: "1:976849939188:web:84cf901d2a3d5f22460ca1",
+  measurementId: "G-Z4MR8KCV3C"
 };
 
 
+// ==========================================
 // INICIAR FIREBASE
+// ==========================================
+
 const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
 
-// ELEMENTOS
+// ==========================================
+// ELEMENTOS HTML
+// ==========================================
+
 const historico =
   document.getElementById("historico");
 
-const totalPecas =
+const totalPecasElemento =
   document.getElementById("totalPecas");
 
-const totalOS =
+const totalOSElemento =
   document.getElementById("totalOS");
 
 const btnSalvar =
   document.getElementById("btnSalvar");
 
 
+// ==========================================
 // DATA AUTOMÁTICA
+// ==========================================
+
 document.getElementById("data").valueAsDate =
   new Date();
 
 
+// ==========================================
 // VARIÁVEIS
+// ==========================================
+
 let editandoId = null;
 
 let registros = [];
 
 
-// SALVAR
+// ==========================================
+// SALVAR REGISTRO
+// ==========================================
+
 btnSalvar.addEventListener("click", async () => {
 
   const data =
     document.getElementById("data").value;
 
   const pecas =
-    Number(document.getElementById("pecas").value);
+    Number(
+      document.getElementById("pecas").value
+    );
 
   const os =
-    Number(document.getElementById("os").value);
+    Number(
+      document.getElementById("os").value
+    );
 
+  // VALIDAÇÃO
   if (!data || pecas <= 0 || os <= 0) {
 
     alert("Preencha todos os campos!");
@@ -80,43 +101,63 @@ btnSalvar.addEventListener("click", async () => {
     return;
   }
 
-  // EDITAR
-  if (editandoId) {
+  try {
 
-    await updateDoc(
-      doc(db, "registros", editandoId),
-      {
-        data,
-        pecas,
-        os
-      }
-    );
+    // ==========================================
+    // EDITAR
+    // ==========================================
 
-    editandoId = null;
+    if (editandoId) {
 
-    btnSalvar.innerText =
-      "Salvar Registro";
+      await updateDoc(
+        doc(db, "registros", editandoId),
+        {
+          data,
+          pecas,
+          os
+        }
+      );
 
-  } else {
+      editandoId = null;
 
-    // NOVO
-    await addDoc(
-      collection(db, "registros"),
-      {
-        data,
-        pecas,
-        os
-      }
-    );
+      btnSalvar.innerText =
+        "Salvar Registro";
+
+    } else {
+
+      // ==========================================
+      // NOVO REGISTRO
+      // ==========================================
+
+      await addDoc(
+        collection(db, "registros"),
+        {
+          data,
+          pecas,
+          os,
+          criadoEm: new Date()
+        }
+      );
+
+    }
+
+    limparCampos();
+
+  } catch (erro) {
+
+    console.error(erro);
+
+    alert("Erro ao salvar!");
 
   }
-
-  limparCampos();
 
 });
 
 
+// ==========================================
 // TEMPO REAL
+// ==========================================
+
 onSnapshot(
 
   collection(db, "registros"),
@@ -144,24 +185,28 @@ onSnapshot(
 );
 
 
-// RENDER
+// ==========================================
+// RENDERIZAR HISTÓRICO
+// ==========================================
+
 function renderizar(lista) {
 
   historico.innerHTML = "";
 
-  let totalPecas = 0;
+  let somaPecas = 0;
 
-  let totalOS = 0;
+  let somaOS = 0;
 
+  // ORDENAR POR DATA
   lista.sort((a, b) =>
     new Date(b.data) - new Date(a.data)
   );
 
   lista.forEach((item) => {
 
-    totalPecas += item.pecas;
+    somaPecas += Number(item.pecas);
 
-    totalOS += item.os;
+    somaOS += Number(item.os);
 
     historico.innerHTML += `
 
@@ -202,14 +247,19 @@ function renderizar(lista) {
     `;
   });
 
-  totalPecas.innerText = totalPecas;
+  totalPecasElemento.innerText =
+    somaPecas;
 
-  totalOS.innerText = totalOS;
+  totalOSElemento.innerText =
+    somaOS;
 
 }
 
 
-// EDITAR
+// ==========================================
+// EDITAR REGISTRO
+// ==========================================
+
 window.editarRegistro = function (id) {
 
   const item =
@@ -244,7 +294,10 @@ window.editarRegistro = function (id) {
 };
 
 
-// DELETAR
+// ==========================================
+// DELETAR REGISTRO
+// ==========================================
+
 window.deletarRegistro =
   async function (id) {
 
@@ -253,14 +306,27 @@ window.deletarRegistro =
 
     if (!confirmar) return;
 
-    await deleteDoc(
-      doc(db, "registros", id)
-    );
+    try {
+
+      await deleteDoc(
+        doc(db, "registros", id)
+      );
+
+    } catch (erro) {
+
+      console.error(erro);
+
+      alert("Erro ao excluir!");
+
+    }
 
   };
 
 
-// FILTRAR
+// ==========================================
+// FILTROS
+// ==========================================
+
 window.filtrar = function (tipo) {
 
   if (tipo === "todos") {
@@ -282,6 +348,12 @@ window.filtrar = function (tipo) {
         (hoje - dataItem)
         / (1000 * 60 * 60 * 24);
 
+      if (tipo === "hoje") {
+
+        return diferenca < 1;
+
+      }
+
       return diferenca <= tipo;
 
     });
@@ -291,7 +363,10 @@ window.filtrar = function (tipo) {
 };
 
 
+// ==========================================
 // FORMATAR DATA
+// ==========================================
+
 function formatarData(data) {
 
   const partes = data.split("-");
@@ -302,7 +377,10 @@ function formatarData(data) {
 }
 
 
-// LIMPAR
+// ==========================================
+// LIMPAR CAMPOS
+// ==========================================
+
 function limparCampos() {
 
   document.getElementById("pecas").value =
